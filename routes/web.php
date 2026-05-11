@@ -4,7 +4,11 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TaskController;
 
 Route::get('/', [TaskController::class, 'index']);
+
 Route::post('/tasks', [TaskController::class, 'store']);
+
+Route::put('/tasks/{task}', [TaskController::class, 'update']);
+
+Route::patch('/tasks/{task}/toggle', [TaskController::class, 'toggle']);
+
 Route::delete('/tasks/{task}', [TaskController::class, 'delete']);
-
-
