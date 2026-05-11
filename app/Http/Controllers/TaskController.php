@@ -7,44 +7,90 @@ use App\Models\Task;
 
 class TaskController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $tasks = Task::latest()->get();
+        $search = $request->search;
+
+        $tasks = Task::when($search, function ($query) use ($search) {
+
+            $query->where('title', 'like', "%{$search}%");
+
+        })->orderBy('id', 'asc')->paginate(4);
         return view('tasks.index', compact('tasks'));
     }
 
+    // CREATE
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required'
+            'title' => 'required|min:3'
         ]);
 
         Task::create([
             'title' => $request->title
         ]);
 
-        // Return updated task list for HTMX
+        session()->flash('success', 'Task added successfully.');
+
         return $this->renderTasks();
     }
 
+    // UPDATE
+    public function update(Request $request, Task $task)
+    {
+        $request->validate([
+            'title' => 'required|min:3'
+        ]);
+
+        $task->update([
+            'title' => $request->title
+        ]);
+
+        session()->flash('success', 'Task updated successfully.');
+
+        return $this->renderTasks();
+    }
+
+    // DELETE
     public function delete(Task $task)
     {
         $task->delete();
 
-        // Return updated task list for HTMX
+        session()->flash('success', 'Task deleted successfully.');
+
         return $this->renderTasks();
     }
 
+    // TOGGLE
+    public function toggle(Task $task)
+    {
+        $task->update([
+            'completed' => !$task->completed
+        ]);
+
+        session()->flash('success', 'Task status updated.');
+
+        return $this->renderTasks();
+    }
+
+    // RENDER TASKS
     private function renderTasks()
     {
-        $tasks = Task::latest()->get();
+        $tasks = Task::latest()->paginate(4);
 
-        // If the request comes via HTMX, return the partial
         if (request()->header('HX-Request')) {
-            return view('tasks.partials.task-list', compact('tasks'));
+
+            return response()->view(
+                'tasks.partials.task-list',
+                compact('tasks')
+            )->header(
+                    'HX-Trigger',
+                    json_encode([
+                        "showMessage" => session('success')
+                    ])
+                );
         }
 
-        // Fallback for normal request
         return redirect('/');
     }
 }
