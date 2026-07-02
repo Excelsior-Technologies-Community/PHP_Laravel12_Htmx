@@ -436,7 +436,3 @@ PHP_Laravel12_Htmx/
 ---
 
 Your PHP_Laravel12_Htmx Project is now ready!
-<<<<<<< HEAD
-=======
-
->>>>>>> development
